@@ -7,13 +7,14 @@ const row = 10;
 function Home() {
 	const bankAllData = useRef();
 	const filteredBankData = useRef();
+	const noResultFound = useRef(false);
 	const [city, setCity] = useState("MUMBAI");
 	const [category, setCategory] = useState("select_category");
 	const [query, setQuery] = useState(null);
 	const [banks, setBanks] = useState(null);
 	const [page, setPage] = useState(1);
 
-	/** These states can be expressed with the help of useReducer too */
+	/** These states can be expressed with the help of useReducer too and that would be more readible **/
 
 	useEffect(
 		function fetchCityBanks() {
@@ -44,11 +45,17 @@ function Home() {
 	}, [page]);
 
 	useEffect(() => {
-		if (filteredBankData.current?.length < 0) {
+		/** Debouncing can be implemented for searching */
+
+		if (bankAllData.current?.length < 0) {
 			return;
 		}
 
+		filteredBankData.current = bankAllData.current;
+
 		if (query && category !== "select_category") {
+			noResultFound.current = false;
+
 			filteredBankData.current = filteredBankData.current.filter(
 				(data) => {
 					const searchable = data[category]?.toLowerCase();
@@ -56,8 +63,10 @@ function Home() {
 					return searchable.includes(query.toLowerCase());
 				}
 			);
-		} else {
-			filteredBankData.current = bankAllData.current;
+
+			if (filteredBankData.current.length === 0) {
+				noResultFound.current = true;
+			}
 		}
 
 		setPage(1);
@@ -116,6 +125,8 @@ function Home() {
 						<button onClick={handleNext}>Next</button>
 					</div>
 				</Fragment>
+			) : noResultFound.current ? (
+				<span>No result found</span>
 			) : (
 				<span>Loading...</span>
 			)}
@@ -162,7 +173,7 @@ function getBanks(banks) {
 
 	return banks.map(({ bank_id, bank_name, ifsc, branch, address }) => {
 		return (
-			<tr key={ifsc}>
+			<tr key={ifsc} onClick={() => {}}>
 				<td>{bank_name}</td>
 				<td>{ifsc}</td>
 				<td>{branch}</td>
